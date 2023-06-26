@@ -43,6 +43,8 @@ T& topK2(std::vector<T>& vec, const int k)
     return topK[k - 1];
 }
 
+
+
 int main()
 {
     const int SIZE = 100000;
