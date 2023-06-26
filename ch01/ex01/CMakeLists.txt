@@ -15,3 +15,6 @@ target_sources(
 
 # add exec
 add_executable(main main.cpp)
+
+# link
+target_link_libraries(main PRIVATE timer)
