@@ -231,6 +231,14 @@ bool test()
         }};
     Dictionary dict{"this", "two", "fat", "that"};
     auto wordList {wordPuzzle(puzz, dict)};
+    std::cout << "Word Puzzle:\n";
+    std::cout << puzz << '\n';
+    std::cout << "Dictionary:\n";
+
+    for (const auto& word : dict)
+        std::cout << word << ' ';
+
+    std::cout << "\n\nResult:\n";
 
     for (const auto& word : wordList)
         std::cout << word << '\n';
