@@ -1,7 +1,7 @@
 #include "Timer.h"
 #include <chrono>
 
-void Timer::elapsed()
+long Timer::elapsed()
 {
     auto now {std::chrono::steady_clock::now()};
     auto elapsed_microsecond
@@ -9,5 +9,5 @@ void Timer::elapsed()
         std::chrono::duration_cast
         <std::chrono::milliseconds>(now - start).count()
     };
-    std::cout << "Elapsed " << elapsed_microsecond << " ms.\n";
+    return elapsed_microsecond;
 };

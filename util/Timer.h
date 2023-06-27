@@ -7,7 +7,7 @@
 class Timer
 {
 public:
-    void elapsed();
+    long elapsed();
 private:
     std::chrono::time_point<std::chrono::steady_clock>
     start {std::chrono::steady_clock::now()};

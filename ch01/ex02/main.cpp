@@ -28,7 +28,7 @@ T& topK2(std::vector<T>& vec, const int k)
 
     std::sort(topK.begin(), topK.end(), std::greater<T> {});
 
-    for (int cur{k}; cur < vec.size(); ++cur)
+    for (int cur{k}; cur < static_cast<int>(vec.size()); ++cur)
         if (vec[cur] > topK[k - 1])
         {
             int smaller{0};
@@ -67,12 +67,11 @@ long testTime(topKFn fn, int size, int count)
 
 int main()
 {
-    const int size = 10000;
-    const int count = 10;
+    const int count = 2;
     std::cout << std::setprecision(10) << std::left;
     std::cout <<"size\ttopK1\ttopK2\n";
 
-    for (int size{10}; size <= 1000000; size *= 10)
+    for (int size{2}; size <= 100000; size *= 2)
     {
         auto t1{testTime(&topK1<int>, size, count)};
         auto t2{testTime(&topK2<int>, size, count)};
