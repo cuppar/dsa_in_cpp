@@ -1,82 +1,255 @@
-#include <cstddef>
-#include <functional>
-#include <iomanip>
-#include <ios>
+#include <cstring>
 #include <iostream>
-#include <algorithm>
-#include <stdexcept>
+#include <ostream>
+#include <string>
 #include <vector>
-#include <array>
 
-#include "Timer.h"
-#include "Random.h"
+#include "matrix.h"
 
-template<typename T>
-T& topK1(std::vector<T>& vec, const int k)
+struct Point
 {
-    std::sort(vec.begin(), vec.end(), std::greater());
-    return vec[k - 1];
+    int x;
+    int y;
+};
+bool operator==(const Point& a, const Point& b)
+{
+    return a.x == b.x && a.y == b.y;
 }
 
-template<typename T>
-T& topK2(std::vector<T>& vec, const int k)
+struct Word
 {
-    std::vector<std::reference_wrapper<T>> topK;
-
-    for (int i{0}; i < k; ++i)
-        topK.push_back(vec[i]);
-
-    std::sort(topK.begin(), topK.end(), std::greater<T> {});
-
-    for (int cur{k}; cur < static_cast<int>(vec.size()); ++cur)
-        if (vec[cur] > topK[k - 1])
-        {
-            int smaller{0};
-
-            while (topK[smaller] >= vec[cur])
-                ++smaller;
-
-            for (int j{k - 1}; j >= smaller; --j)
-                topK[j + 1] = topK[j];
-
-            topK[smaller] = vec[cur];
-        }
-
-    return topK[k - 1];
+    Point start;
+    Point end;
+};
+std::ostream& operator<<(std::ostream& out, const Word& word)
+{
+    out << "Word(Start[" << word.start.x << "][" << word.start.y <<
+        "], End[" << word.end.x << "][" << word.end.y << "])";
+    return out;
 }
 
-using topKFn = std::function<int& (std::vector<int>&, const int)>;
-// test a top k function, return the runtime of ms
-long testTime(topKFn fn, int size, int count)
+using WordPuzzle = matrix<char>;
+using Dictionary = std::vector<std::string>;
+
+// input a puzz and dict, return a word list
+std::vector<Word> wordPuzzle(WordPuzzle puzz, Dictionary dict)
 {
-    std::vector<int> vec;
-    vec.reserve(size);
+    std::vector<Word> result;
 
-    for (int i{0}; i < size; ++i)
-        vec.push_back(Random::get(1, size));
-
-    int result;
-
-    Timer t;
-
-    for (int i{0}; i < count; ++i)
-        result = fn(vec, static_cast<int>(vec.size()) / 2);
-
-    return t.elapsed();
-}
-
-int main()
-{
-    const int count = 2;
-    std::cout << std::setprecision(10) << std::left;
-    std::cout <<"size\ttopK1\ttopK2\n";
-
-    for (int size{2}; size <= 100000; size *= 2)
+    for (auto& word : dict)
     {
-        auto t1{testTime(&topK1<int>, size, count)};
-        auto t2{testTime(&topK2<int>, size, count)};
-        std::cout << size << "\t" << t1 << "\t" << t2 << "\n";
+        for (int row{0}; row < puzz.numrows(); ++row)
+        {
+            for (int col{0}; col < puzz.numcols(); ++col)
+            {
+                int r{row};
+                int c{col};
+                int cur{0};
+
+                // right
+                while (c < puzz.numcols()
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    ++c;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(r, --c)
+                    --c;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // right-down
+                while (c < puzz.numcols()
+                        && r < puzz.numrows()
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    ++c;
+                    ++r;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(--r, --c)
+                    --c;
+                    --r;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // down
+                while (
+                    r < puzz.numrows()
+                    && cur < static_cast<int>(word.size())
+                    && word[cur] == puzz[r][c])
+                {
+                    ++r;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(--r, c)
+                    --r;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // left-down
+                while (c >= 0
+                        && r < puzz.numrows()
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    --c;
+                    ++r;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(--r, ++c)
+                    ++c;
+                    --r;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // left
+                while (c >= 0
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    --c;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(r, ++c)
+                    ++c;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // left-up
+                while (c >= 0
+                        && r >= 0
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    --c;
+                    --r;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(++r, ++c)
+                    ++c;
+                    ++r;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // up
+                while (r >= 0
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    --r;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(++r, c)
+                    ++r;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+
+                r = row;
+                c = col;
+                cur = 0;
+
+                // up-right
+                while (r >= 0
+                        && c < puzz.numcols()
+                        && cur < static_cast<int>(word.size())
+                        && word[cur] == puzz[r][c])
+                {
+                    --r;
+                    ++c;
+                    ++cur;
+                }
+
+                if (cur >= static_cast<int>(word.size()))
+                {
+                    // match start(row, col), end(++r, --c)
+                    ++r;
+                    --c;
+                    result.push_back(Word{Point{row + 1, col + 1}, Point{r + 1, c + 1}});
+                }
+            }
+        }
     }
 
+    return result;
+}
+
+bool test()
+{
+    WordPuzzle puzz{std::vector<std::vector<char>>{
+            {'t', 'h', 'i', 's'},
+            {'w', 'a', 't', 's'},
+            {'o', 'a', 'h', 'g'},
+            {'f', 'g', 'd', 't'},
+        }};
+    Dictionary dict{"this", "two", "fat", "that"};
+    auto wordList {wordPuzzle(puzz, dict)};
+
+    for (const auto& word : wordList)
+        std::cout << word << '\n';
+
+    if (wordList.size() != 4)
+        return false;
+
+    return wordList[0].start == Point{1, 1}
+           && wordList[0].end == Point{1, 4}
+           && wordList[1].start == Point{1, 1}
+           && wordList[1].end == Point{3, 1}
+           && wordList[2].start == Point{4, 1}
+           && wordList[2].end == Point{2, 3}
+           && wordList[3].start == Point{4, 4}
+           && wordList[3].end == Point{1, 1};
+}
+int main()
+{
+    auto ispass{test()};
+    std::cout << "\n##### test " << (ispass ? "pass" : "fial") << '\n';
     return 0;
 }

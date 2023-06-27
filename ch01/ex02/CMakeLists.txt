@@ -11,7 +11,7 @@ cmake_policy(SET CMP0076 NEW)
 add_library(util)
 target_sources(
   util
-  PUBLIC ../../util/Timer.h ../../util/Random.h
+  PUBLIC ../../util/Timer.h ../../util/Random.h ../../util/matrix.h
   PRIVATE ../../util/Timer.cpp)
 target_include_directories(util PUBLIC ../../util)
 

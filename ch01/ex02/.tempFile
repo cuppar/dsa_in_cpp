@@ -1,0 +1,44 @@
+#include <cstring>
+#include <iostream>
+#include <string>
+#include <vector>
+
+#include "matrix.h"
+
+struct Point
+{
+    int x;
+    int y;
+};
+
+struct Word
+{
+    Point start;
+    Point end;
+};
+
+using WordPuzzle = matrix<char>;
+using Dictionary = std::vector<std::string>;
+
+// input a puzz and dict, return a word list
+std::vector<Word> wordPuzzle(WordPuzzle puzz, Dictionary dict)
+{
+    return {};
+}
+
+bool test()
+{
+    WordPuzzle puzz{std::vector<std::vector<char>>{
+            {'a', 'b'},
+            {'a', 'b'},
+        }};
+    std::cout<<puzz;
+    return true;
+}
+
+int main()
+{
+	auto ispass{test()};
+    std::cout << "\n##### test " << (ispass ? "pass" : "fial") << '\n';
+    return 0;
+}
