@@ -1,0 +1,9 @@
+line1 come from testfile2
+
+#include <testfile3>
+
+line2 come from testfile2
+
+#include <testfile4>
+
+line3 come from testfile2

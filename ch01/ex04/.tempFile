@@ -1,0 +1,9 @@
+#include <iostream>
+
+int main(int argc, char** argv)
+{
+	std::cout<<argc<<'\n';
+	std::cout<<argv<<'\n';
+
+    return 0;
+}
