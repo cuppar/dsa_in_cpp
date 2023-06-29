@@ -218,10 +218,43 @@ public:
             if (old_size < size)
             {
                 // init the more el
-                for (int i{old_size - 1}; i < size; ++i)
+                for (int i{old_size}; i < size; ++i)
                     m_array[i] = T{};
             }
         }
+    }
+
+    void insert(T obj, int pos)
+    {
+        if (pos < 0 || pos > m_size)
+            throw std::runtime_error("insert pos out of range");
+
+        resize(m_size + 1);
+
+        for (int i{m_size - 1}; i >= pos; --i)
+            m_array[i + 1] = m_array[i];
+
+        m_array[pos] = obj;
+    }
+    void remove(int pos)
+    {
+        if (pos < 0 || pos >= m_size)
+            throw std::runtime_error("remove pos out of range");
+
+        for (int i{pos + 1}; i < m_size; ++i)
+            m_array[i - 1] = m_array[i];
+
+        m_size--;
+    }
+    bool contains(T obj)
+    {
+        for (int i{0}; i < m_size; ++i)
+        {
+            if (obj == m_array[i])
+                return true;
+        }
+
+        return false;
     }
 private:
     T* m_array;
@@ -292,5 +325,23 @@ int main()
     c5.reserve(13);
     std::cout << "reserve(13): " << '\n';
     std::cout << "c5: " << c5 << '\n';
+    printline();
+    Collection<int> c6;
+    std::cout << "c6: " << c6 << '\n';
+
+    for (int i{0}; i < 10; ++i)
+    {
+        c6.insert(i, i);
+        std::cout << "c6: " << c6 << '\n';
+    }
+
+    c6.remove(4);
+    std::cout << "c6: " << c6 << '\n';
+    c6.remove(0);
+    std::cout << "c6: " << c6 << '\n';
+    c6.remove(6);
+    std::cout << "c6: " << c6 << '\n';
+    std::cout << "contains 6: " << c6.contains(6) << '\n';
+    std::cout << "contains 8: " << c6.contains(8) << '\n';
     return 0;
 }
