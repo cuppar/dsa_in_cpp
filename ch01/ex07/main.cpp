@@ -8,10 +8,12 @@ class Collection final
 {
 public:
     Collection()
+        : m_array{nullptr}, m_size{0}, m_capacity{0}
     {
         std::cout << "default constractor\n";
     }
     Collection(int size)
+        : Collection()
     {
         std::cout << "constractor(int size): size = " << size << "\n";
 
@@ -19,7 +21,7 @@ public:
             throw std::runtime_error("Collection size need non-negative");
 
         if (size > 0)
-            resize(size);
+            reserve(size);
     }
     Collection(std::initializer_list<T> list)
         : Collection(list.size())
@@ -52,6 +54,7 @@ public:
     {
         using std::swap;
         swap(a.m_size, b.m_size);
+        swap(a.m_capacity, b.m_capacity);
         swap(a.m_array, b.m_array);
     }
     ~Collection()
@@ -60,10 +63,12 @@ public:
         delete[] m_array;
     }
     Collection(const Collection& c)
-        : Collection(c.m_size)
+        : Collection(c.m_capacity)
     {
         for (int i{0}; i < c.m_size; ++i)
             m_array[i] = c.m_array[i];
+
+        m_size = c.m_size;
     }
     Collection(Collection&& c)
         : Collection()
@@ -117,8 +122,6 @@ public:
     // end big five
     void makeEmpty()
     {
-        delete[] m_array;
-        m_array = nullptr;
         m_size = 0;
     }
     bool isEmpty()
@@ -129,20 +132,49 @@ public:
     {
         for (int i{0}; i < m_size; ++i)
             out << m_array[i] << ' ';
+
+        out << " (size: " << m_size << ", capacity: " << m_capacity << ")";
     }
     const T& operator[](int index)const
     {
+        if (index >= m_size || index < 0)
+            throw std::runtime_error("out of range");
+
         return m_array[index];
     }
     T& operator[](int index)
     {
+        if (index >= m_size || index < 0)
+            throw std::runtime_error("out of range");
+
         return m_array[index];
     }
+    void reserve(int size)
+    {
+        if (m_capacity < size)
+        {
+            m_capacity = size;
 
-private:
-    T* m_array{nullptr};
-    int m_size{0};
-public:
+            if (m_array)
+            {
+                T* new_array = new T[m_capacity] {};
+
+                for (int i{0}; i < m_size; ++i)
+                    new_array[i] = m_array[i];
+
+                delete[] m_array;
+
+                m_array = new_array;
+            }
+
+            else
+            {
+                m_array = new T[m_capacity] {};
+                m_size = m_capacity;
+            }
+        }
+    }
+
     void resize(int size)
     {
         std::cout << "resize to " << size << '\n';
@@ -156,21 +188,45 @@ public:
             return;
         }
 
-        T* new_array = new T[size] {};
-
-        if (m_array && m_size > 0)
+        if (size > m_capacity)
         {
-            int move_size = size > m_size ? m_size : size;
+            if (m_capacity <= 0)
+                m_capacity = 1;
 
-            for (int i{0}; i < move_size; ++i)
+            // double capacity
+            while (m_capacity < size)
+                m_capacity *= 2;
+
+            T* new_array = new T[m_capacity] {};
+
+            for (int i{0}; i < m_size; ++i)
                 new_array[i] = m_array[i];
 
             delete[] m_array;
+
+            m_array = new_array;
+
+            m_size = size;
         }
 
-        m_size = size;
-        m_array = new_array;
+        else
+        {
+            // just change size
+            int old_size = m_size;
+            m_size = size;
+
+            if (old_size < size)
+            {
+                // init the more el
+                for (int i{old_size - 1}; i < size; ++i)
+                    m_array[i] = T{};
+            }
+        }
     }
+private:
+    T* m_array;
+    int m_size;
+    int m_capacity;
 };
 
 template <typename T>
@@ -201,12 +257,40 @@ int main()
     c2[0] = 9;
     std::cout << "c2[0]: " << c2[0] << '\n';
     std::cout << "collection[0]: " << collection[0] << '\n';
-    std::cout << collection << '\n';
+    std::cout << "collection: " << collection << '\n';
+    std::cout << "c2: " << c2 << '\n';
     printline();
     Collection<int> c3;
     c3 = {9, 8, 7, 6, 5};
     c3[0] = 55;
     std::cout << "c3: " << c3 << '\n';
     std::cout << "c3[0]: " << c3[0] << '\n';
+    printline();
+    Collection<int> c4(10);
+    std::cout << "c4: " << c4 << '\n';
+    c4.resize(5);
+    std::cout << "resize(5): " << '\n';
+    std::cout << "c4: " << c4 << '\n';
+    c4.makeEmpty();
+    std::cout << "makeEmpty(): " << '\n';
+    std::cout << "c4: " << c4 << '\n';
+    printline();
+    Collection<int> c5;
+    std::cout << "c5: " << c5 << '\n';
+    c5.resize(3);
+    std::cout << "resize(3): " << '\n';
+    std::cout << "c5: " << c5 << '\n';
+    c5.resize(5);
+    std::cout << "resize(5): " << '\n';
+    std::cout << "c5: " << c5 << '\n';
+    c5.reserve(3);
+    std::cout << "reserve(3): " << '\n';
+    std::cout << "c5: " << c5 << '\n';
+    c5.makeEmpty();
+    std::cout << "makeEmpty(): " << '\n';
+    std::cout << "c5: " << c5 << '\n';
+    c5.reserve(13);
+    std::cout << "reserve(13): " << '\n';
+    std::cout << "c5: " << c5 << '\n';
     return 0;
 }
