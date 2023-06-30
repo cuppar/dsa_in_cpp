@@ -7,6 +7,7 @@ template <typename T>
 class matrix
 {
 public:
+    matrix() = default;
     matrix(int rows, int cols)
         : array(rows)
     {
@@ -15,8 +16,15 @@ public:
     }
     matrix(const std::vector<std::vector<T>>& v): array{v} {}
     matrix(std::vector<std::vector<T>>&& v): array{std::move(v)} {}
+    void resize(int rows, int cols)
+    {
+        array.resize(rows);
 
-    const std::vector<T>& operator[](int row)const
+        for (auto& thisRow : array)
+            thisRow.resize(cols);
+    }
+
+    const std::vector<T>& operator[](int row) const
     {
         return array[row];
     }
@@ -35,6 +43,8 @@ public:
     }
     void print(std::ostream& out)
     {
+        out << "matrix(" << numrows() << ", " << numcols() << ")\n";
+
         for (const auto& row : array)
         {
             for (const auto& col : row)
