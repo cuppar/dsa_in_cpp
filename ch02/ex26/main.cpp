@@ -6,6 +6,12 @@
 using Arr = std::vector<int>;
 int find_majority_candidate(Arr arr, int size)
 {
+    if (size == 0)
+        return -1;
+
+    if (size == 1)
+        return arr[0];
+
     int new_size{0};
 
     for (int i{0}; i < size; i += 2)
@@ -15,16 +21,10 @@ int find_majority_candidate(Arr arr, int size)
             if (arr[i] == arr[i + 1])
                 arr[new_size++] = arr[i];
         }
-
-        else
-            arr[new_size++] = arr[i];
     }
 
-    if (new_size == 0)
-        return -1;
-
-    if (new_size == 1)
-        return arr[0];
+    if (size / 2 * 2 < size)
+        arr[new_size++] = arr[size - 1];
 
     return find_majority_candidate(arr, new_size);
 }
@@ -38,7 +38,7 @@ int find_majority(Arr arr)
         return -1;
 
     if (std::count(arr.begin(), arr.end(), candidate)
-            > arr.size() / 2.0)
+            > (int)arr.size() / 2)
         return candidate;
 
     else
