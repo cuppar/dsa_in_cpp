@@ -139,24 +139,203 @@ public:
         return theArray[theSize - 1];
     }
 
-    typedef Object *iterator;
-    typedef const Object *const_iterator;
+    class const_iterator
+    {
+    public:
+        const_iterator()
+            : current{nullptr},
+              invalidated{true},
+              theVector{Vector<int>{}},
+              initArray{nullptr}
+        {
+        }
+
+        const Object &operator*() const
+        {
+            if (isInvalidated())
+                throw std::runtime_error("invalidated iterator");
+            return *current;
+        }
+
+        const_iterator &operator++()
+        {
+            if (current == theVector->end().current)
+                throw std::runtime_error("iterator out of range");
+            ++current;
+            return *this;
+        }
+        const_iterator operator++(int)
+        {
+            if (current == theVector->end().current)
+                throw std::runtime_error("iterator out of range");
+            const_iterator old{*this};
+            ++(*this);
+            return old;
+        }
+
+        bool operator==(const const_iterator &rhs) const
+        {
+            return current == rhs.current;
+        }
+        bool operator!=(const const_iterator &rhs) const
+        {
+            return !(*this == rhs);
+        }
+
+    protected:
+        Object *current;
+        bool invalidated;
+        const Vector<Object> *theVector;
+        Object *initArray;
+
+        const_iterator(const Vector &v, Object *p)
+            : current{p},
+              invalidated{false},
+              theVector{&v},
+              initArray{theVector->theArray}
+        {
+        }
+
+        bool isInvalidated() const
+        {
+            return invalidated || initArray != theVector->theArray;
+        }
+        void invalidate() { invalidated = true; }
+
+        friend class Vector<Object>;
+    };
+    class iterator : public const_iterator
+    {
+    public:
+        const Object &operator*() const
+        {
+            if (this->isInvalidated())
+                throw std::runtime_error("invalidated iterator");
+            return *this->current;
+        }
+
+        Object &operator*()
+        {
+            if (this->isInvalidated())
+                throw std::runtime_error("invalidated iterator");
+            return *this->current;
+        }
+
+        iterator &operator++()
+        {
+            if (this->current == this->theVector->end().current)
+                throw std::runtime_error("iterator out of range");
+            ++this->current;
+            return *this;
+        }
+        iterator operator++(int)
+        {
+            if (this->current == this->theVector->end().current)
+                throw std::runtime_error("iterator out of range");
+            auto old{*this};
+            ++(*this);
+            return old;
+        }
+
+    protected:
+        iterator(const Vector &v, Object *p)
+            : const_iterator(v, p)
+        {
+        }
+        friend class Vector<Object>;
+    };
+
+    iterator insert(const_iterator &pos, const Object &x)
+    {
+        if (pos.theVector != this)
+            throw std::runtime_error("mismatch iterator");
+        int offset{0};
+        auto it{begin()};
+        while (it != pos)
+        {
+            ++offset;
+            ++it;
+        }
+        if (theSize == theCapacity)
+        {
+            theCapacity = theCapacity * 2 + 1;
+            auto newArray = new Object[theCapacity];
+            for (int i{0}; i < offset; ++i)
+                newArray[i] = std::move(theArray[i]);
+            newArray[offset] = x;
+            for (int i{offset}; i < theSize; ++i)
+                newArray[i + 1] = theArray[i];
+
+            std::swap(theArray, newArray);
+            delete[] newArray;
+            pos.invalidate();
+        }
+        else
+        {
+            for (int i{theSize - 1}; i >= offset; --i)
+                theArray[i + 1] = theArray[i];
+            theArray[offset] = x;
+        }
+        ++theSize;
+
+        auto new_it{begin()};
+        for (int i{0}; i < offset; ++i)
+            ++new_it;
+        return new_it;
+    }
+
+    iterator erase(const_iterator &pos)
+    {
+        if (pos.theVector != this)
+            throw std::runtime_error("mismatch iterator");
+        int offset{0};
+        auto it{begin()};
+        while (it != pos)
+        {
+            ++it;
+            ++offset;
+        }
+
+        if (theSize == theCapacity / 2)
+        {
+            theCapacity /= 2;
+            auto newArray = new Object[theCapacity];
+            for (int i{0}; i < offset; ++i)
+                newArray[i] = theArray[i];
+            for (int i{offset}; i < theSize - 1; ++i)
+                newArray[i] = theArray[i + 1];
+            std::swap(theArray, newArray);
+            delete[] newArray;
+            pos.invalidate();
+        }
+        else
+        {
+            for (int i{offset}; i < theSize - 1; ++i)
+                theArray[i] = theArray[i + 1];
+        }
+        --theSize;
+
+        auto new_it{begin()};
+        for (int i{0}; i < offset; ++i)
+            ++new_it;
+        return new_it;
+    }
 
     iterator begin()
     {
-        return &theArray[0];
+        return {*this, &theArray[0]};
     }
     const_iterator begin() const
     {
-        return &theArray[0];
+        return {*this, &theArray[0]};
     }
     iterator end()
     {
-        return &theArray[size()];
+        return {*this, &theArray[size()]};
     }
     const_iterator end() const
     {
-        return &theArray[size()];
+        return {*this, &theArray[size()]};
     }
 
 private:
@@ -190,15 +369,49 @@ void exec()
     println(v1);
     println(v2);
 
-    auto found = std::find(v1.begin(), v1.end(), 6);
+    // println("######### push_back");
+    // v1.reserve(5);
+    // println(v1);
+    // println("size: ", v1.size());
+    // println("capacity: ", v1.capacity());
+    // auto pos{v1.begin()};
+    // for (int i{0}; i < 3; ++i)
+    //     ++pos;
+    // println("before push: *pos: ", *pos);
+    // v1.push_back(9);
+    // println("after push: *pos: ", *pos);
+    // println(v1);
+    // println("size: ", v1.size());
+    // println("capacity: ", v1.capacity());
+    println("######### insert");
+    v1.reserve(5);
+    println(v1);
     println("size: ", v1.size());
     println("capacity: ", v1.capacity());
-    println(found);
-    println(v1.end());
-    if (found != v1.end())
-    {
-        println("found: ", *found);
-    }
+    auto insert_pos{v1.begin()};
+    for (int i{0}; i < 32; ++i)
+        ++insert_pos;
+    println("before insert: *insert_pos: ", *insert_pos);
+
+    auto it = v1.insert(insert_pos, 9);
+    println(v1);
+    // println("after insert: *insert_pos: ", *insert_pos);
+    println("size: ", v1.size());
+    println("capacity: ", v1.capacity());
+    println("inserted: ", *it);
+    // println("######### erase");
+    // v1.reserve(11);
+    // println(v1);
+    // println("size: ", v1.size());
+    // println("capacity: ", v1.capacity());
+    // auto erase_pos{v1.begin()};
+    // for (int i{0}; i < 4; ++i)
+    //     ++erase_pos;
+    // auto it = v1.erase(erase_pos);
+    // println(v1);
+    // println("size: ", v1.size());
+    // println("capacity: ", v1.capacity());
+    // println("it == v1.end(): ", it == v1.end());
 }
 
 int main()

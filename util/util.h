@@ -27,12 +27,14 @@ std::ostream & operator << (
 template <typename ...Args>
 void print(const Args& ...args)
 {
+    std::cout << std::boolalpha;
     (std::cout << ... << args);
 }
 
 template <typename ...Args>
 void println(const Args& ...args)
 {
+    std::cout << std::boolalpha;
     (std::cout << ... << args) << '\n';
 }
 #endif
