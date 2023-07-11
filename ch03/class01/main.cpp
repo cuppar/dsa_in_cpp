@@ -1,6 +1,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sstream>
 #include "util.h"
 
 enum op_associate
@@ -134,15 +135,45 @@ double calc(std::string_view s)
     return stack.back();
 }
 
+std::string postfix2indix(std::string_view s)
+{
+    std::vector<std::string> stack;
+    for (auto &ch : s)
+    {
+        if (op_map.find(ch) != op_map.end())
+        {
+            // is opr
+            auto right{stack.back()};
+            stack.pop_back();
+            auto left{stack.back()};
+            stack.pop_back();
+            stack.push_back("(" + left + ch + right + ")");
+        }
+        else
+        {
+            // is opd
+            std::ostringstream s;
+            s << ch;
+            stack.push_back(s.str());
+        }
+    }
+    return stack.back();
+}
+
+void p(std::string_view expr)
+{
+    auto postfix_expr{infix2postfix(expr)};
+    println(expr.data(), " => ", postfix_expr.c_str(), " => ",
+            calc(postfix_expr), " => ", postfix2indix(postfix_expr).c_str());
+}
 void exec()
 {
     auto expr1 = "1+2*3+(4*5+6)*7";
-    auto expr2 = "2^2^3";
-
-    auto postfix_expr1 = infix2postfix(expr1);
-    auto postfix_expr2 = infix2postfix(expr2);
-    println(expr1, " => ", postfix_expr1, " => ", calc(postfix_expr1));
-    println(expr2, " => ", postfix_expr2, " => ", calc(postfix_expr2));
+    auto expr2 = "(2^2)^3";
+    auto expr3 = "2^2^3";
+    p(expr1);
+    p(expr2);
+    p(expr3);
 }
 
 int main()
