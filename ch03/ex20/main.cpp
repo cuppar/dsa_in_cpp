@@ -12,11 +12,12 @@ private:
         T data;
         Node *prev;
         Node *next;
+        bool deleted;
 
         Node(const T &d = T{}, Node *p = nullptr, Node *n = nullptr)
-            : data{d}, prev{p}, next{n} {}
+            : data{d}, prev{p}, next{n}, deleted{false} {}
         Node(T &&d, Node *p = nullptr, Node *n = nullptr)
-            : data{std::move(d)}, prev{p}, next{n} {}
+            : data{std::move(d)}, prev{p}, next{n}, deleted{false} {}
     };
 
 public:
@@ -37,6 +38,10 @@ public:
 
         const_iterator &operator++()
         {
+            if (*this == theList->end())
+                throw std::runtime_error("iterator out of end");
+            while (current->next->deleted)
+                current = current->next;
             current = current->next;
             return *this;
         }
@@ -50,6 +55,10 @@ public:
 
         const_iterator &operator--()
         {
+            if (*this == theList->end())
+                throw std::runtime_error("iterator out of begin");
+            while (current->prev->deleted)
+                current = current->prev;
             current = current->prev;
             return *this;
         }
@@ -65,8 +74,7 @@ public:
         {
             auto it{*this};
             for (int i{0}; i < k; ++i)
-                if (it.current)
-                    it.current = it.current->next;
+                ++it;
             return it;
         }
 
@@ -74,8 +82,7 @@ public:
         {
             auto it{*this};
             for (int i{0}; i < k; ++i)
-                if (it.current)
-                    it.current = it.current->prev;
+                --it;
             return it;
         }
 
@@ -104,6 +111,8 @@ public:
                 current->prev == nullptr || current != current->next->prev ||
                 current != current->prev->next)
                 throw std::runtime_error("stale iterator");
+            else if (current->deleted)
+                throw std::runtime_error("deleted iterator");
         }
         T &retrieve() const
         {
@@ -130,6 +139,10 @@ public:
 
         iterator &operator++()
         {
+            if (*this == this->theList->end())
+                throw std::runtime_error("iterator out of end");
+            while (this->current->next->deleted)
+                this->current = this->current->next;
             this->current = this->current->next;
             return *this;
         }
@@ -142,6 +155,10 @@ public:
         }
         iterator &operator--()
         {
+            if (*this == this->theList->end())
+                throw std::runtime_error("iterator out of end");
+            while (this->current->prev->deleted)
+                this->current = this->current->prev;
             this->current = this->current->prev;
             return *this;
         }
@@ -157,8 +174,7 @@ public:
         {
             auto it{*this};
             for (int i{0}; i < k; ++i)
-                if (it.current)
-                    it.current = it.current->next;
+                ++it;
             return it;
         }
 
@@ -166,8 +182,7 @@ public:
         {
             auto it{*this};
             for (int i{0}; i < k; ++i)
-                if (it.current)
-                    it.current = it.current->prev;
+                --it;
             return it;
         }
 
@@ -225,11 +240,13 @@ public:
     // iterator
     iterator begin()
     {
-        return {*this, head->next};
+        iterator begin{*this, head};
+        return ++begin;
     }
     const_iterator begin() const
     {
-        return {*this, head->next};
+        iterator begin{*this, head};
+        return ++begin;
     }
     iterator end()
     {
@@ -245,6 +262,10 @@ public:
     {
         return theSize;
     }
+    int real_size() const
+    {
+        return theSize + deletedCount;
+    }
     bool empty() const
     {
         return size() == 0;
@@ -252,7 +273,9 @@ public:
     void clear()
     {
         while (!empty())
+        {
             pop_front();
+        }
     }
 
     // methods
@@ -317,11 +340,12 @@ public:
         if (it.theList != this)
             return it;
         Node *p{it.current};
-        iterator retVal{*this, p->next};
-        p->prev->next = p->next;
-        p->next->prev = p->prev;
-        delete p;
+        p->deleted = true;
         --theSize;
+        ++deletedCount;
+        auto retVal{++it};
+        if (deletedCount >= theSize)
+            real_erase();
         return retVal;
     }
     iterator erase(iterator from, iterator to)
@@ -352,16 +376,34 @@ public:
 
 private:
     int theSize;
+    int deletedCount;
     Node *head;
     Node *tail;
 
     void init()
     {
         theSize = 0;
+        deletedCount = 0;
         head = new Node;
         tail = new Node;
         head->next = tail;
         tail->prev = head;
+    }
+    void real_erase()
+    {
+        Node *p{head->next};
+        while (p != tail)
+        {
+            Node *temp{p->next};
+            if (p->deleted)
+            {
+                p->prev->next = p->next;
+                p->next->prev = p->prev;
+                delete p;
+            }
+            p = temp;
+        }
+        deletedCount = 0;
     }
 };
 
@@ -390,8 +432,15 @@ void exec()
 
     println(l);
     auto it{l.begin()};
-    l.erase(it);
+    it = l.erase(it + 1);
     println(l);
+    it = l.insert(it, 99);
+    // it = l.erase(it + 1);
+    // it = l.erase(it + 1);
+    // it = l.erase(it + 1);
+    println(l);
+    println(l.size());
+    println(l.real_size());
     println(*it);
 
     // println(l2);
