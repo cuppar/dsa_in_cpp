@@ -5,7 +5,7 @@
 template <typename T>
 class SLList
 {
-private:
+public:
     struct Node
     {
         T data;
@@ -18,7 +18,7 @@ public:
         init();
     }
 
-    int size()
+    int size() const
     {
         Node *p = head;
         int size{0};
@@ -73,8 +73,25 @@ public:
             prev = p;
         }
     }
+    void reverse() const
+    {
+        if (size() == 0)
+            return;
+        Node *last = nullptr;
+        Node *p;
+        while (true)
+        {
+            p = head->next;
+            while (p->next != last)
+                p = p->next;
+            ::print(p->data, ' ');
+            last = p;
+            if (p == head->next)
+                return;
+        }
+    }
 
-private:
+public:
     Node *head;
     void init()
     {
@@ -82,6 +99,15 @@ private:
         head->next = nullptr;
     }
 };
+
+void reverse(SLList<int>::Node *p)
+{
+    if (p == nullptr)
+        return;
+
+    reverse(p->next);
+    print(p->data);
+}
 
 void exec()
 {
@@ -91,10 +117,13 @@ void exec()
         l.add(i);
     println(l.size());
     l.print();
-    l.remove(-1);
-    l.remove(3);
-    l.print();
-    println(l.size());
+    reverse(l.head->next);
+    println();
+    l.reverse();
+    // l.remove(-1);
+    // l.remove(3);
+    // l.print();
+    // println(l.size());
 }
 
 int main()

@@ -6,10 +6,10 @@
 #include "util.h"
 
 template <typename T>
-class ThreeStack
+class CQueue
 {
 public:
-    ThreeStack(int size)
+    CQueue(int size)
         : theArray{std::vector<T>(size)},
           leftTop{0},
           midTop{0},
@@ -101,7 +101,7 @@ private:
 };
 
 template <typename T>
-std::ostream &operator<<(std::ostream &os, ThreeStack<T> s)
+std::ostream &operator<<(std::ostream &os, CQueue<T> s)
 {
     os << "left: { ";
     const char *sp[] = {"", ", "};
@@ -133,7 +133,7 @@ std::ostream &operator<<(std::ostream &os, ThreeStack<T> s)
 
 void exec()
 {
-    ThreeStack<int> s(10);
+    CQueue<int> s(10);
     s.push_left(1);
     s.push_left(2);
     s.push_left(3);
