@@ -6,16 +6,16 @@
 #include "matrix.h"
 
 template <template <class, class> class Container,
-          class T, class Alloc = std::allocator <T> >
-std::ostream & operator << (
-    std::ostream& os,
-    const Container <T, Alloc>& container)
+          class T, class Alloc = std::allocator<T>>
+std::ostream &operator<<(
+    std::ostream &os,
+    const Container<T, Alloc> &container)
 {
-    const char* sep[] = { "", ", " };
+    const char *sep[] = {"", ", "};
     int si = 0;
     os << "{ ";
 
-    for (const T& elt : container)
+    for (const T &elt : container)
     {
         os << sep[si] << elt;
         si = 1;
@@ -24,15 +24,15 @@ std::ostream & operator << (
     return os << " }";
 }
 
-template <typename ...Args>
-void print(const Args& ...args)
+template <typename... Args>
+void print(const Args &...args)
 {
     std::cout << std::boolalpha;
     (std::cout << ... << args);
 }
 
-template <typename ...Args>
-void println(const Args& ...args)
+template <typename... Args>
+void println(const Args &...args)
 {
     std::cout << std::boolalpha;
     (std::cout << ... << args) << '\n';
