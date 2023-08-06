@@ -30,19 +30,43 @@ public:
         swap(*this, rhs);
     }
 
-    const T &findMin() const;
-    const T &findMax() const;
-    bool contains(const T &x) const;
-    bool isEmpty() const;
-    void printTree(std::ostream &out = std::cout) const;
+    const T &findMin() const
+    {
+        return findMin(root);
+    }
+    const T &findMax() const
+    {
+        return findMax(root);
+    }
+    bool contains(const T &x) const
+    {
+        return contains(x, root);
+    }
+    bool isEmpty() const
+    {
+        root == nullptr
+    }
+    void printTree(std::ostream &out = std::cout) const
+    {
+        printTree(root, out);
+    }
 
     void makeEmpty()
     {
         makeEmpty(root);
     }
-    void insert(const T &x);
-    void insert(T &&x);
-    void remove(const T &x);
+    void insert(const T &x)
+    {
+        insert(x, root);
+    }
+    void insert(T &&x)
+    {
+        insert(std::move(x), root);
+    }
+    void remove(const T &x)
+    {
+        remove(x, root);
+    }
 
 private:
     struct Node
@@ -79,7 +103,16 @@ private:
         delete t;
         t = nullptr;
     }
-    void printTree(Node *t, std::ostream &out) const;
+    void printTree(Node *t, std::ostream &out, int depth = 0) const
+    {
+        if (!t)
+            return;
+        printTree(t->right, out, depth + 1);
+        for (int i{0}; i < depth; ++i)
+            out << "    ";
+        out << t->element << '\n';
+        printTree(t->left, out, depth + 1);
+    }
     Node *clone(Node *t) const
     {
         if (!t)
