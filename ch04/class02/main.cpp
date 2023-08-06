@@ -44,7 +44,7 @@ public:
     }
     bool isEmpty() const
     {
-        root == nullptr
+        return root == nullptr;
     }
     void printTree(std::ostream &out = std::cout) const
     {
@@ -87,12 +87,77 @@ private:
 
     Node *root;
 
-    void insert(const T &x, Node *&t);
-    void insert(T &&x, Node *&t);
-    void remove(const T &x, Node *&t);
-    Node *findMin(Node *t) const;
-    Node *findMax(Node *t) const;
-    bool contains(const T &x, Node *t) const;
+    void insert(const T &x, Node *&t)
+    {
+        if (t == nullptr)
+            t = new Node{x, nullptr, nullptr};
+        else if (x < t->element)
+            insert(x, t->left);
+        else if (t->element < x)
+            insert(x, t->right);
+        else
+            ; // do nothing.
+    }
+    void insert(T &&x, Node *&t)
+    {
+        if (t == nullptr)
+            t = new Node{std::move(x), nullptr, nullptr};
+        else if (x < t->element)
+            insert(std::move(x), t->left);
+        else if (t->element < x)
+            insert(std::move(x), t->right);
+        else
+            ; // do nothing.
+    }
+    void remove(const T &x, Node *&t)
+    {
+        if (t == nullptr)
+            return;
+        else if (x < t->element)
+            remove(x, t->left);
+        else if (t->element < x)
+            remove(x, t->right);
+        else
+        {
+            if (t->left == nullptr || t->right == nullptr)
+            {
+                Node *oldNode = t;
+                t = t->left ? t->left : t->right;
+                delete oldNode;
+            }
+            else
+            {
+                t->element = findmin(t->right)->element;
+                remove(t->element, t->right);
+            }
+        }
+    }
+    Node *findMin(Node *t) const
+    {
+        if (t != nullptr)
+            while (t->left != nullptr)
+                t = t->left;
+        return t;
+    }
+    Node *findMax(Node *t) const
+    {
+        if (t == nullptr)
+            return nullptr;
+        if (t->right == nullptr)
+            return t;
+        return findMax(t->right);
+    }
+    bool contains(const T &x, Node *t) const
+    {
+        if (t == nullptr)
+            return false;
+        else if (t->element == x)
+            return true;
+        else if (x < t->element)
+            return contains(x, t->left);
+        else
+            return contains(x, t->right);
+    }
     void makeEmpty(Node *&t)
     {
         if (!t)
@@ -123,6 +188,11 @@ private:
 
 void exec()
 {
+    BST<int> t{};
+    std::vector<int> v{6, 2, 1, 4, 3, 8};
+    for (auto i : v)
+        t.insert(i);
+    t.printTree();
 }
 
 int main()
